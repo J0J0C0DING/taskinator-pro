@@ -1,5 +1,59 @@
 var tasks = {};
 
+$(".card .list-group").sortable({
+  connectWith: $(".card .list-group"),
+  scroll: false,
+  tolerance: "pointer",
+  helper: "clone",
+  activate: function (event) {
+    // console.log("activate", this);
+  },
+  deactivate: function (event) {
+    // console.log("deactivate", this);
+  },
+  over: function (event) {
+    // console.log("over", event.target);
+  },
+  out: function (event) {
+    // console.log("out", event.target);
+  },
+  update: function (event) {
+    let tempArr = [];
+    // Loop over current set of children in sortable list
+    $(this)
+      .children()
+      .each(function () {
+        var text = $(this).find("p").text().trim();
+
+        let date = $(this).find("span").text().trim();
+
+        tempArr.push({
+          text: text,
+          date: date,
+        });
+      });
+    let arrName = $(this).attr("id").replace("list-", "");
+
+    tasks[arrName] = tempArr;
+    saveTasks();
+  },
+});
+
+$("#trash").droppable({
+  accept: ".card .list-group-item",
+  tolerance: "touch",
+  drop: function (event, ui) {
+    ui.draggable.remove();
+    console.log("drop");
+  },
+  over: function (event, ui) {
+    console.log("over");
+  },
+  out: function (event, ui) {
+    console.log("out");
+  },
+});
+
 var createTask = function (taskText, taskDate, taskList) {
   // create elements that make up a task item
   var taskLi = $("<li>").addClass("list-group-item");
