@@ -63,6 +63,8 @@ var createTask = function (taskText, taskDate, taskList) {
   // append span and p element to parent li
   taskLi.append(taskSpan, taskP);
 
+  auditTask(taskLi);
+
   // append to ul list on the page
   $("#list-" + taskList).append(taskLi);
 };
@@ -129,11 +131,38 @@ $(".list-group").on("click", "span", function () {
   // Swap out elements
   $(this).replaceWith(dateInput);
 
+  // Enable jquery ui datepicker
+  dateInput.datepicker({
+    minDate: 1,
+    onClose: function () {
+      // when calendar is closed, force a "change"event on the dateInput
+      $(this).trigger("change");
+    },
+  });
+
   // Auto focus on new element
   dateInput.trigger("focus");
 });
 
-$(".list-group").on("blur", "input[type = 'text']", function () {
+var auditTask = function (taskEl) {
+  // Get date from task element
+  let date = $(taskEl).find("span").text().trim();
+
+  // Convert to moment object at 5:00pm
+  let time = moment(date, "L").set("hour", 17);
+
+  // Remove any old class from element
+  $(taskEl).removeClass("list-group-item-warning list-group-item-danger");
+
+  // Apply new class if task is near / over due date
+  if (moment().isAfter(time)) {
+    $(taskEl).addClass("list-group-item-danger");
+  } else if (Math.abs(moment().diff(time, "days")) <= 2) {
+    $(taskEl).addClass("list-group-item-warning");
+  }
+};
+
+$(".list-group").on("change", "input[type = 'text']", function () {
   // Get current text
   var date = $(this).val().trim();
 
@@ -152,6 +181,9 @@ $(".list-group").on("blur", "input[type = 'text']", function () {
 
   // Replace input with span element
   $(this).replaceWith(taskSpan);
+
+  // Pass task's <li> element into auditTask() to check new due date
+  auditTask($(taskSpan).closest(".list-group-item"));
 });
 
 // modal was triggered
@@ -164,6 +196,11 @@ $("#task-form-modal").on("show.bs.modal", function () {
 $("#task-form-modal").on("shown.bs.modal", function () {
   // highlight textarea
   $("#modalTaskDescription").trigger("focus");
+});
+
+// Adding datepicker to modal
+$("#modalDueDate").datepicker({
+  minDate: 1,
 });
 
 // save button in modal was clicked
